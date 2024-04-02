@@ -54,7 +54,7 @@ from GitHub:
 
 ```R
 # install.packages("remotes")
-remotes::install_github("stephenslab/susieR")
+remotes::install_github("william-denault/susieRsmall")
 ```
 
 See [here](https://stephenslab.github.io/susieR/articles/mwe.html) for

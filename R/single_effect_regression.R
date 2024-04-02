@@ -88,8 +88,30 @@ single_effect_regression =
         check_null_threshold = check_null_threshold)
 
   # log(po) = log(BF * prior) for each SNP
-  lbf = dnorm(betahat,0,sqrt(V + shat2),log = TRUE) -
-        dnorm(betahat,0,sqrt(shat2),log = TRUE)
+  #lbf = dnorm(betahat,0,sqrt(V + shat2),log = TRUE) -
+  #      dnorm(betahat,0,sqrt(shat2),log = TRUE)
+
+
+
+  t_lBF <- function ( betahat, sdhat, sd_prior, df){
+
+
+    up   <- LaplacesDemon::dstp(betahat,
+                                tau = 1/(sdhat^2 + sd_prior^2),
+                                nu  = df,
+                                log = TRUE)
+    down <- LaplacesDemon::dstp(betahat,
+                                tau = 1/sdhat^2,
+                                nu  = df,
+                                log = TRUE)
+    out <- up- down
+    return(out)
+  }
+
+  lbf = t_lBF(betahat=betahat,
+              sdhat=sqrt(shat2),
+              sd_prior=sqrt(V),
+              df= (length(y)-1))
   lpo = lbf + log(prior_weights + sqrt(.Machine$double.eps))
 
   # Deal with special case of infinite shat2 (e.g., happens if X does
@@ -97,7 +119,7 @@ single_effect_regression =
   lbf[is.infinite(shat2)] = 0
   lpo[is.infinite(shat2)] = 0
   maxlpo = max(lpo)
-  
+
   # w is proportional to
   #
   #   posterior odds = BF * prior,
