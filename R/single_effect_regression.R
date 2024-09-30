@@ -108,10 +108,26 @@ single_effect_regression =
     return(out)
   }
 
-  lbf = t_lBF(betahat=betahat,
-              sdhat=sqrt(shat2),
-              sd_prior=sqrt(V),
-              df= (length(y)-1))
+
+  compute_log_ssbf <- function (x, y, s0) {
+    x   <- x - mean(x)
+    y   <- y - mean(y)
+    n   <- length(x)
+    xx  <- sum(x*x)
+    xy  <- sum(x*y)
+    yy  <- sum(y*y)
+    r0  <- s0/(s0 + 1/xx)
+    sxy <- xy/sqrt(xx*yy)
+    return((log(1 - r0) - n*log(1 - r0*sxy^2))/2)
+  }
+
+
+
+  lbf = do.call(c, lapply(1:ncol(X), function(j){
+    compute_log_ssbf (x=X[,j],y=y,
+                      s0 =sqrt(V))
+  }))
+
   lpo = lbf + log(prior_weights + sqrt(.Machine$double.eps))
 
   # Deal with special case of infinite shat2 (e.g., happens if X does
