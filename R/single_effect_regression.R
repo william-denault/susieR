@@ -121,12 +121,11 @@ single_effect_regression =
     return((log(1 - r0) - n*log(1 - r0*sxy^2))/2)
   }
 
-
-
-  lbf = do.call(c, lapply(1:ncol(X), function(j){
+  lbf  = do.call(c, lapply(1:ncol(X), function(j){
     compute_log_ssbf (x=X[,j],y=y,
                       s0 =sqrt(V))
   }))
+
 
   lpo = lbf + log(prior_weights + sqrt(.Machine$double.eps))
 
