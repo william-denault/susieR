@@ -26,6 +26,7 @@ update_each_effect = function (X, y, s, estimate_prior_variance = FALSE,
       res = single_effect_regression(R,X,s$V[l],s$sigma2,s$pi,
                                      estimate_prior_method,
                                      check_null_threshold)
+
       # Update the variational estimate of the posterior mean.
       s$mu[l,]    = res$mu
       s$alpha[l,] = res$alpha
