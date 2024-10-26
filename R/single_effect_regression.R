@@ -192,7 +192,7 @@ single_effect_regression =
   # print(pm_log_lik)
    #print(" loglik")
    #print(current_log_lik)
-   if( pm_log_lik +1.1 >= current_log_lik ){
+   if( pm_log_lik +.0001 >= current_log_lik ){
      V = 0
    }
 
