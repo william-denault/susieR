@@ -82,31 +82,20 @@ single_effect_regression =
     shat2 = residual_variance/attr(X,"d")
     if (is.null(prior_weights))
       prior_weights = rep(1/ncol(X),ncol(X))
-    if (optimize_V != "EM" && optimize_V != "none")
+    if (optimize_V != "EM" && optimize_V != "none"){
+
       V = optimize_prior_variance(optimize_V,betahat,shat2,prior_weights,
                                   alpha = NULL,post_mean2 = NULL,V_init = V,
                                   check_null_threshold = check_null_threshold)
 
+    }
+
+    #  browser()
     # log(po) = log(BF * prior) for each SNP
     #lbf = dnorm(betahat,0,sqrt(V + shat2),log = TRUE) -
     #      dnorm(betahat,0,sqrt(shat2),log = TRUE)
 
 
-
-    t_lBF <- function ( betahat, sdhat, sd_prior, df){
-
-
-      up   <- LaplacesDemon::dstp(betahat,
-                                  tau = 1/(sdhat^2 + sd_prior^2),
-                                  nu  = df,
-                                  log = TRUE)
-      down <- LaplacesDemon::dstp(betahat,
-                                  tau = 1/sdhat^2,
-                                  nu  = df,
-                                  log = TRUE)
-      out <- up- down
-      return(out)
-    }
 
 
     compute_log_ssbf <- function (x, y, s0) {
@@ -145,8 +134,11 @@ single_effect_regression =
     # Posterior prob for each SNP.
     weighted_sum_w = sum(w_weighted)
     alpha = w_weighted / weighted_sum_w
-    cor_ss=  length(y)/(length(y)-2)
-    post_var = cor_ss*  (1/V + attr(X,"d")/residual_variance)^(-1) # Posterior variance.
+
+
+    #SS correction ----
+    cor_ss=length(y)/(length(y)-2)
+    post_var = cor_ss*(1/V + attr(X,"d")/residual_variance)^(-1) # Posterior variance.
     post_mean = (1/residual_variance) * post_var * Xty
     post_mean2 = post_var + post_mean^2 # Second moment.
 
@@ -158,6 +150,52 @@ single_effect_regression =
       V = optimize_prior_variance(optimize_V,betahat,shat2,prior_weights,
                                   alpha,post_mean2,
                                   check_null_threshold = check_null_threshold)
+
+
+    #browser()
+    #get current likelihood
+    lbf_n  = do.call(c, lapply(1:ncol(X), function(j){
+      compute_log_ssbf (x=X[,j],y=y,
+                        s0 =sqrt(V))
+    }))
+    lpo = lbf_n + log(prior_weights + sqrt(.Machine$double.eps))
+
+    # Deal with special case of infinite shat2 (e.g., happens if X does
+    # not vary).
+    lbf[is.infinite(shat2)] = 0
+    lpo[is.infinite(shat2)] = 0
+
+    maxlpo = max(lpo)
+    w_weighted = exp(lpo - maxlpo)
+    weighted_sum_w = sum(w_weighted)
+
+
+    current_log_lik = log(weighted_sum_w) + maxlpo
+
+    #get like for v=0
+    lbf_0  = do.call(c, lapply(1:ncol(X), function(j){
+      compute_log_ssbf (x=X[,j],y=y,
+                        s0 =sqrt(0))
+    }))
+    lpo = lbf   + log(prior_weights + sqrt(.Machine$double.eps))
+    lbf[is.infinite(shat2)] = 0
+    lpo[is.infinite(shat2)] = 0
+
+    maxlpo = max(lpo)
+    w_weighted = exp(lpo - maxlpo)
+    weighted_sum_w = sum(w_weighted)
+
+
+    pm_log_lik = log(weighted_sum_w) + maxlpo
+
+    #print("Null loglik")
+    # print(pm_log_lik)
+    #print(" loglik")
+    #print(current_log_lik)
+    if( pm_log_lik +0.00001 >= current_log_lik ){
+      V = 0
+    }
+
 
     return(list(alpha = alpha,mu = post_mean,mu2 = post_mean2,lbf = lbf,
                 lbf_model = lbf_model,V = V,loglik = loglik))
@@ -173,6 +211,8 @@ est_V_uniroot = function (betahat, shat2, prior_weights) {
 optimize_prior_variance = function (optimize_V, betahat, shat2, prior_weights,
                                     alpha = NULL, post_mean2 = NULL,
                                     V_init = NULL, check_null_threshold = 0) {
+
+  # browser()
   V = V_init
   if (optimize_V != "simple") {
     if(optimize_V == "optim") {
@@ -189,8 +229,11 @@ optimize_prior_variance = function (optimize_V, betahat, shat2, prior_weights,
       V = exp(lV)
     } else if (optimize_V == "uniroot")
       V = est_V_uniroot(betahat,shat2,prior_weights)
-    else if (optimize_V == "EM")
+    else if (optimize_V == "EM"){
+
       V = sum(alpha * post_mean2)
+
+    }
     else
       stop("Invalid option for optimize_V method")
   }
@@ -206,9 +249,12 @@ optimize_prior_variance = function (optimize_V, betahat, shat2, prior_weights,
   # non-zeros estimates unless they are indeed small enough to be
   # neglible. See more intuition at
   # https://stephens999.github.io/fiveMinuteStats/LR_and_BF.html
-  if (loglik(0,betahat,shat2,prior_weights) +
-      check_null_threshold >= loglik(V,betahat,shat2,prior_weights))
-    V = 0
+
+
+
+  #if (loglik(0,betahat,shat2,prior_weights) +
+  #   check_null_threshold >= loglik(V,betahat,shat2,prior_weights))
+  #  V = 0
   return(V)
 }
 
@@ -220,7 +266,8 @@ optimize_prior_variance = function (optimize_V, betahat, shat2, prior_weights,
 #
 #' @importFrom Matrix colSums
 #' @importFrom stats dnorm
-loglik = function (V, betahat, shat2, prior_weights) {
+loglik = function (V, betahat, shat2, prior_weights, lbf=NULL,SS=FALSE) {
+
 
   #log(bf) for each SNP
   lbf = dnorm(betahat,0,sqrt(V+shat2),log = TRUE) -
@@ -235,6 +282,8 @@ loglik = function (V, betahat, shat2, prior_weights) {
   maxlpo = max(lpo)
   w_weighted = exp(lpo - maxlpo)
   weighted_sum_w = sum(w_weighted)
+
+
   return(log(weighted_sum_w) + maxlpo)
 }
 
