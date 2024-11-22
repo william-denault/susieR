@@ -90,7 +90,7 @@ single_effect_regression =
 
     }
 
-    #  browser()
+    # browser()
     # log(po) = log(BF * prior) for each SNP
     #lbf = dnorm(betahat,0,sqrt(V + shat2),log = TRUE) -
     #      dnorm(betahat,0,sqrt(shat2),log = TRUE)
@@ -137,8 +137,8 @@ single_effect_regression =
 
 
     #SS correction ----
-    cor_ss=length(y)/(length(y)-2)
-    post_var = cor_ss*(1/V + attr(X,"d")/residual_variance)^(-1) # Posterior variance.
+     cor_ss=length(y)/(length(y)-2)
+    post_var =  cor_ss*(1/V + attr(X,"d")/residual_variance)^(-1) # Posterior variance.
     post_mean = (1/residual_variance) * post_var * Xty
     post_mean2 = post_var + post_mean^2 # Second moment.
 
@@ -150,52 +150,6 @@ single_effect_regression =
       V = optimize_prior_variance(optimize_V,betahat,shat2,prior_weights,
                                   alpha,post_mean2,
                                   check_null_threshold = check_null_threshold)
-
-
-    #browser()
-    #get current likelihood
-    lbf_n  = do.call(c, lapply(1:ncol(X), function(j){
-      compute_log_ssbf (x=X[,j],y=y,
-                        s0 =sqrt(V))
-    }))
-    lpo = lbf_n + log(prior_weights + sqrt(.Machine$double.eps))
-
-    # Deal with special case of infinite shat2 (e.g., happens if X does
-    # not vary).
-    lbf[is.infinite(shat2)] = 0
-    lpo[is.infinite(shat2)] = 0
-
-    maxlpo = max(lpo)
-    w_weighted = exp(lpo - maxlpo)
-    weighted_sum_w = sum(w_weighted)
-
-
-    current_log_lik = log(weighted_sum_w) + maxlpo
-
-    #get like for v=0
-    lbf_0  = do.call(c, lapply(1:ncol(X), function(j){
-      compute_log_ssbf (x=X[,j],y=y,
-                        s0 =sqrt(0))
-    }))
-    lpo = lbf   + log(prior_weights + sqrt(.Machine$double.eps))
-    lbf[is.infinite(shat2)] = 0
-    lpo[is.infinite(shat2)] = 0
-
-    maxlpo = max(lpo)
-    w_weighted = exp(lpo - maxlpo)
-    weighted_sum_w = sum(w_weighted)
-
-
-    pm_log_lik = log(weighted_sum_w) + maxlpo
-
-    #print("Null loglik")
-    # print(pm_log_lik)
-    #print(" loglik")
-    #print(current_log_lik)
-    if( pm_log_lik +0.00001 >= current_log_lik ){
-      V = 0
-    }
-
 
     return(list(alpha = alpha,mu = post_mean,mu2 = post_mean2,lbf = lbf,
                 lbf_model = lbf_model,V = V,loglik = loglik))
