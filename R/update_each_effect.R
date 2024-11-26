@@ -8,7 +8,9 @@
 #   compare likelihood between current estimate and zero the null
 update_each_effect = function (X, y, s, estimate_prior_variance = FALSE,
                                estimate_prior_method = "optim",
-                               check_null_threshold) {
+                               check_null_threshold,
+                               alpha=0,
+                               beta=0) {
   if (!estimate_prior_variance)
     estimate_prior_method = "none"
 
@@ -25,7 +27,9 @@ update_each_effect = function (X, y, s, estimate_prior_variance = FALSE,
 
       res = single_effect_regression(R,X,s$V[l],s$sigma2,s$pi,
                                      estimate_prior_method,
-                                     check_null_threshold)
+                                     check_null_threshold,
+                                     alpha= alpha,
+                                     beta=beta)
 
       # Update the variational estimate of the posterior mean.
       s$mu[l,]    = res$mu

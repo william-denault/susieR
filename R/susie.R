@@ -136,7 +136,8 @@
 #'   variance. When \code{estimate_prior_method = "simple"} is used, the
 #'   likelihood at the specified prior variance is compared to the
 #'   likelihood at a variance of zero, and the setting with the larger
-#'   likelihood is retained.
+#'   likelihood is retained. Use option "EM" when using SuSiE with Servin and Stephens
+#'   SER
 #'
 #' @param check_null_threshold When the prior variance is estimated,
 #'   compare the estimate with the null, and set the prior variance to
@@ -198,6 +199,12 @@
 #'
 #' @param n_purity Passed as argument \code{n_purity} to
 #'   \code{\link{susie_get_cs}}.
+#'
+#'  @param alpha  numerical parameter for the NIG prior when using Servin
+#'  and Stephens SER
+#'
+#'  @param beta  numerical parameter for the NIG prior when using Servin
+#'  and Stephens SER
 #'
 #' @return A \code{"susie"} object with some or all of the following
 #'   elements:
@@ -307,7 +314,7 @@ susie = function (X,y,L = min(10,ncol(X)),
                    intercept = TRUE,
                    estimate_residual_variance = TRUE,
                    estimate_prior_variance = TRUE,
-                   estimate_prior_method = c("optim", "EM", "simple"),
+                   estimate_prior_method = c( "EM","optim", "simple"),
                    check_null_threshold = 0,
                    prior_tol = 1e-9,
                    residual_variance_upperbound = Inf,
@@ -322,7 +329,9 @@ susie = function (X,y,L = min(10,ncol(X)),
                    track_fit = FALSE,
                    residual_variance_lowerbound = var(drop(y))/1e4,
                    refine = FALSE,
-                   n_purity = 100) {
+                   n_purity = 100,
+                   alpha=0,
+                   beta=0 ) {
 
   # Process input estimate_prior_method.
   estimate_prior_method = match.arg(estimate_prior_method)
@@ -421,7 +430,9 @@ susie = function (X,y,L = min(10,ncol(X)),
     if (track_fit)
       tracking[[i]] = susie_slim(s)
     s = update_each_effect(X,y,s,estimate_prior_variance,estimate_prior_method,
-                           check_null_threshold)
+                           check_null_threshold,
+                           alpha=alpha,
+                           beta=beta)
     if (verbose)
       print(paste0("objective:",get_objective(X,y,s)))
 

@@ -42,6 +42,12 @@
 #'   log-scale to compare likelihood between current estimate and zero
 #'   the null.
 #'
+#'  @param alpha  numerical parameter for the NIG prior when using Servin
+#'  and Stephens SER
+#'
+#'  @param beta  numerical parameter for the NIG prior when using Servin
+#'  and Stephens SER
+#'
 #' @return A list with the following elements:
 #'
 #' \item{alpha}{Vector of posterior inclusion probabilities;
@@ -65,6 +71,7 @@
 #'
 #' \item{loglik}{The log-likelihood, \eqn{\log p(y | X, V)}.}
 #'
+#'
 #' @importFrom stats dnorm
 #' @importFrom stats uniroot
 #' @importFrom stats optim
@@ -75,7 +82,9 @@
 single_effect_regression =
   function (y, X, V, residual_variance = 1, prior_weights = NULL,
             optimize_V = c("none", "optim", "uniroot", "EM", "simple"),
-            check_null_threshold = 0) {
+            check_null_threshold = 0,
+            alpha=0,
+            beta=0) {
     optimize_V = match.arg(optimize_V)
     Xty = compute_Xty(X,y)
     betahat = (1/attr(X,"d")) * Xty
@@ -90,7 +99,7 @@ single_effect_regression =
 
     }
 
-    # browser()
+    #
     # log(po) = log(BF * prior) for each SNP
     #lbf = dnorm(betahat,0,sqrt(V + shat2),log = TRUE) -
     #      dnorm(betahat,0,sqrt(shat2),log = TRUE)
@@ -137,10 +146,25 @@ single_effect_regression =
 
 
     #SS correction ----
-     cor_ss=length(y)/(length(y)-2)
-    post_var =  cor_ss*(1/V + attr(X,"d")/residual_variance)^(-1) # Posterior variance.
-    post_mean = (1/residual_variance) * post_var * Xty
-    post_mean2 = post_var + post_mean^2 # Second moment.
+
+    if(V <=0){
+      post_mean  = rep(0, ncol(X))
+      post_mean2 = rep(0, ncol(X))
+    }else{
+      tt=  do.call(rbind, lapply(1: ncol(X), function(j){
+        posterior_moment_SS(x=X[,j],
+                            y=y ,
+                            s0_t=sqrt(V))
+           }
+        )
+      )
+
+
+
+      post_mean =   c(tt[,1])
+      post_mean2 =  c(tt[,2])
+    }
+
 
     # BF for single effect model.
     lbf_model = maxlpo + log(weighted_sum_w)
@@ -206,11 +230,33 @@ optimize_prior_variance = function (optimize_V, betahat, shat2, prior_weights,
 
 
 
-  #if (loglik(0,betahat,shat2,prior_weights) +
-  #   check_null_threshold >= loglik(V,betahat,shat2,prior_weights))
-  #  V = 0
+   if (loglik(0,betahat,shat2,prior_weights) +
+      check_null_threshold >= loglik(V,betahat,shat2,prior_weights))
+     V = 0
   return(V)
 }
+
+
+
+
+
+posterior_moment_SS <- function (x,y,
+                                 s0_t=1,
+                                 alpha=0,
+                                 beta=0){
+
+
+  omega <- (( 1/s0_t^2)+crossprod(x))^-1
+  b_bar<- omega%*%(crossprod(x,y))
+
+  post_var_up <- 0.5*(crossprod(y)  -  b_bar *(omega ^(-1))*b_bar) +beta
+  post_var_down <- 0.5*(length(y)*(1/omega )) +alpha
+  post_var <- (post_var_up/post_var_down)* length(y)/(length(y)-2+alpha)
+  post_moment2=  post_var+b_bar^2
+  return(c(b_bar,  post_moment2))
+}
+
+
 
 # In these functions, s2 represents residual_variance, and shat2 is an
 # estimate of it.
