@@ -574,11 +574,11 @@ susie = function (X,y,L = min(10,ncol(X)),
         m = c(m,list(s3))
       }
       if(length(m) == 0){
-        conti = FALSE
+        conti =TRUE
       }else{
         elbo = sapply(m,function(x) susie_get_objective(x))
-        if ((max(elbo) - susie_get_objective(s)) <= 0)
-          conti = FALSE
+        if (abs ((max(elbo) - susie_get_objective(s)) <= 0))
+          conti = TRUE
         else
           s = m[[which.max(elbo)]]
       }
