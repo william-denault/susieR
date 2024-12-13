@@ -107,7 +107,9 @@ single_effect_regression =
 
 
 
-    compute_log_ssbf <- function (x, y, s0) {
+    compute_log_ssbf <- function (x, y, s0,
+                                  alpha=0,
+                                  beta=0) {
       x   <- x - mean(x)
       y   <- y - mean(y)
       n   <- length(x)
@@ -116,14 +118,14 @@ single_effect_regression =
       yy  <- sum(y*y)
       r0  <- s0/(s0 + 1/xx)
       sxy <- xy/sqrt(xx*yy)
-      return((log(1 - r0) - n*log(1 - r0*sxy^2))/2)
+      ratio= (beta+ yy*(1 - r0*sxy^2))/(beta+ yy)
+      return((log(1 - r0) - (n+alpha)*log(ratio))/2)
     }
 
     lbf  = do.call(c, lapply(1:ncol(X), function(j){
       compute_log_ssbf (x=X[,j],y=y,
                         s0 =sqrt(V))
     }))
-
 
     lpo = lbf + log(prior_weights + sqrt(.Machine$double.eps))
 
@@ -170,10 +172,12 @@ single_effect_regression =
     lbf_model = maxlpo + log(weighted_sum_w)
     loglik = lbf_model + sum(dnorm(y,0,sqrt(residual_variance),log = TRUE))
 
-    if(optimize_V == "EM")
-      V = optimize_prior_variance(optimize_V,betahat,shat2,prior_weights,
-                                  alpha,post_mean2,
-                                  check_null_threshold = check_null_threshold)
+    if(optimize_V == "EM"){
+
+      V =  sum(alpha * post_mean2) #optimize_prior_variance(optimize_V,betahat,shat2,prior_weights,
+                               #   alpha,post_mean2,
+                                #  check_null_threshold = check_null_threshold)
+    }
 
     return(list(alpha = alpha,mu = post_mean,mu2 = post_mean2,lbf = lbf,
                 lbf_model = lbf_model,V = V,loglik = loglik))
