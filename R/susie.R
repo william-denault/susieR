@@ -314,7 +314,7 @@ susie = function (X,y,L = min(10,ncol(X)),
                    intercept = TRUE,
                    estimate_residual_variance = TRUE,
                    estimate_prior_variance = TRUE,
-                   estimate_prior_method = c(  "EM","optim","simple"),
+                   estimate_prior_method = c( "optim", "EM","simple"),
                    check_null_threshold = 0,
                    prior_tol = 1e-9,
                    residual_variance_upperbound = Inf,
@@ -337,10 +337,7 @@ susie = function (X,y,L = min(10,ncol(X)),
   estimate_prior_method = match.arg(estimate_prior_method)
 
 
-  if(! estimate_prior_method ==  "EM"){
 
-    stop("Prior variance optimization must be done using EM option" )
-  }
 
   # Check input X.
   if (!(is.double(X) & is.matrix(X)) &
