@@ -428,7 +428,7 @@ susie = function (X,y,L = min(10,ncol(X)),
   elbo = rep(as.numeric(NA),max_iter + 1)
   elbo[1] = -Inf;
   tracking = list()
-
+  #s$V = 0*s$V +1
   for (i in 1:max_iter) {
     if (track_fit)
       tracking[[i]] = susie_slim(s)
@@ -436,17 +436,19 @@ susie = function (X,y,L = min(10,ncol(X)),
                            check_null_threshold,
                            alpha=alpha,
                            beta=beta)
-    if (verbose)
+print(s$V)
+
+     if (verbose)
       print(paste0("objective:",get_objective(X,y,s)))
 
     # Compute objective before updating residual variance because part
     # of the objective s$kl has already been computed under the
     # residual variance before the update.
-    elbo[i+1] = get_objective(X,y,s)
-    if ((elbo[i+1] - elbo[i]) < tol) {
-      s$converged = TRUE
-      break
-    }
+    ##elbo[i+1] = get_objective(X,y,s)
+    # if ((elbo[i+1] - elbo[i]) < tol) {
+    #  s$converged = TRUE
+    #   break
+    # }
 
     if (estimate_residual_variance) {
       s$sigma2 = pmax(residual_variance_lowerbound,

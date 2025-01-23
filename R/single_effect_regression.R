@@ -91,6 +91,7 @@ single_effect_regression =
     shat2 = residual_variance/attr(X,"d")
     if (is.null(prior_weights))
       prior_weights = rep(1/ncol(X),ncol(X))
+
     if (optimize_V != "EM" && optimize_V != "none"){
 
       V = optimize_prior_variance(optimize_V,betahat,shat2,prior_weights,
@@ -146,25 +147,29 @@ single_effect_regression =
     weighted_sum_w = sum(w_weighted)
     alpha = w_weighted / weighted_sum_w
 
-
     #SS correction ----
 
     if(V <=0){
       post_mean  = rep(0, ncol(X))
       post_mean2 = rep(0, ncol(X))
+      beta_1     = rep(0, ncol(X))
     }else{
-      tt=  do.call(rbind, lapply(1: ncol(X), function(j){
-        posterior_moment_SS(x=X[,j],
-                            y=y ,
-                            s0_t=sqrt(V))
-           }
-        )
-      )
+
+
+    post_mean=do.call(c, lapply(1:ncol(X), function(i){
+      posterior_mean_SS_suff((attr(X,"d")[i]) , Xty[i], s0_t=V)
+    }))
+    yty=t(y)%*%y
 
 
 
-      post_mean =   c(tt[,1])
-      post_mean2 =  c(tt[,2])
+    tt= do.call(rbind, lapply(1:ncol(X), function(i){
+          posterior_var_SS_suff(xtx=(attr(X,"d")[i]) , xty= Xty[i],yty=yty,n= nrow(X), s0_t=V)
+        }))
+
+    beta_1=tt[,2]
+    post_var=tt[,1]
+    post_mean2=  post_mean^2+post_var
     }
 
 
@@ -174,12 +179,13 @@ single_effect_regression =
 
     if(optimize_V == "EM"){
 
-      V =  sum(alpha * post_mean2) #optimize_prior_variance(optimize_V,betahat,shat2,prior_weights,
+      V =  sqrt(sum(alpha * (betahat^2 + ( beta_1/(nrow(X)-2))* shat2 ))) #optimize_prior_variance(optimize_V,betahat,shat2,prior_weights,
                                #   alpha,post_mean2,
                                 #  check_null_threshold = check_null_threshold)
     }
 
-    return(list(alpha = alpha,mu = post_mean,mu2 = post_mean2,lbf = lbf,
+#    post_mean2 =post_mean^2+ post_var
+    return(list(alpha = alpha,mu = post_mean,mu2 =   post_mean2 ,lbf = lbf,
                 lbf_model = lbf_model,V = V,loglik = loglik))
   }
 
@@ -194,7 +200,6 @@ optimize_prior_variance = function (optimize_V, betahat, shat2, prior_weights,
                                     alpha = NULL, post_mean2 = NULL,
                                     V_init = NULL, check_null_threshold = 0) {
 
-  # browser()
   V = V_init
   if (optimize_V != "simple") {
     if(optimize_V == "optim") {
@@ -250,6 +255,20 @@ posterior_moment_SS <- function (x,y,
                                  beta=0){
 
 
+  x   <- x - mean(x)
+  y   <- y - mean(y)
+  n   <- length(x)
+  xx  <- sum(x*x)
+  xy  <- sum(x*y)
+  yy  <- sum(y*y)
+  r0  <- s0_t/(s0_t+ 1/xx)
+  sxy <- xy/sqrt(xx*yy)
+
+  s1= r0^2/(xx
+            )
+
+  beta1=  beta+yy*(1 - r0*sxy^2)
+  alpha1=alpha+n
   omega <- (( 1/s0_t^2)+crossprod(x))^-1
   b_bar<- omega%*%(crossprod(x,y))
 
@@ -257,7 +276,12 @@ posterior_moment_SS <- function (x,y,
   post_var_down <- 0.5*(length(y)*(1/omega )) +alpha
   post_var <- (post_var_up/post_var_down)* length(y)/(length(y)-2+alpha)
   post_moment2=  post_var+b_bar^2
-  return(c(b_bar,  post_moment2))
+
+
+
+  out= c(b_bar,  post_moment2, alpha1, beta1, s1)
+ names( out) =c("b_bar",  "post_moment2", "alpha1", "beta1", "s1")
+  return(out)
 }
 
 
@@ -332,4 +356,25 @@ lbf = function (V, shat2, T2) {
   l = 0.5*log(shat2/(V + shat2)) + 0.5*T2*(V/(V + shat2))
   l[is.nan(l)] = 0
   return(l)
+}
+
+
+posterior_mean_SS_suff <- function(xtx,xty, s0_t=1){
+  omega <- (( 1/s0_t^2)+xtx)^-1
+  b_bar<- omega%*%(xty)
+  return( b_bar)
+}
+
+
+posterior_var_SS_suff <- function (xtx,xty,yty, n,s0_t=1){
+  if(s0_t <0.00001){
+    return(c(0,0))
+  }
+  omega <- (( 1/s0_t^2)+xtx)^-1
+  b_bar<- omega%*%(xty)
+  beta1=(yty  -  b_bar *(omega ^(-1))*b_bar)
+  post_var_up <- 0.5*(yty  -  b_bar *(omega ^(-1))*b_bar)
+  post_var_down <- 0.5*(n*(1/omega ))
+  post_var <- omega*(post_var_up/post_var_down)* n/(n-2)
+  return( c( post_var,beta1))
 }

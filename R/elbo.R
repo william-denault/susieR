@@ -3,7 +3,7 @@
 # @param f A flash fit object.
 # @keywords internal
 get_objective = function (X, Y, s) {
-  return(Eloglik(X,Y,s) - sum(s$KL))
+  return(Eloglik(X,Y,s) - sum(s$KL) +10)
 }
 
 # Expected loglikelihood for a susie fit.
@@ -17,6 +17,7 @@ Eloglik = function (X, Y, s) {
 get_ER2 = function (X, Y, s) {
   Xr_L = compute_MXt(s$alpha * s$mu,X) # L by N matrix
   postb2 = s$alpha * s$mu2 # Posterior second moment.
+
   return(sum((Y - s$Xr)^2) - sum(Xr_L^2) + sum(attr(X,"d") * t(postb2)))
 }
 

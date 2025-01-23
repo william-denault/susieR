@@ -30,8 +30,12 @@ update_each_effect = function (X, y, s, estimate_prior_variance = FALSE,
                                      check_null_threshold,
                                      alpha= alpha,
                                      beta=beta)
-
+      # browser()
+      #plot( exp(res$lbf)/sum(res$lbf))
+      #points(res$alpha, pch=20, col=3)
       # Update the variational estimate of the posterior mean.
+
+     # print( res$alpha[1:10])
       s$mu[l,]    = res$mu
       s$alpha[l,] = res$alpha
       s$mu2[l,]   = res$mu2
