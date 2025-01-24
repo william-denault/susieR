@@ -125,7 +125,7 @@ single_effect_regression =
 
     lbf  = do.call(c, lapply(1:ncol(X), function(j){
       compute_log_ssbf (x=X[,j],y=y,
-                        s0 =sqrt(V))
+                        s0 = sqrt(V))
     }))
 
     lpo = lbf + log(prior_weights + sqrt(.Machine$double.eps))
@@ -156,19 +156,19 @@ single_effect_regression =
     }else{
 
 
-    post_mean=do.call(c, lapply(1:ncol(X), function(i){
-      posterior_mean_SS_suff((attr(X,"d")[i]) , Xty[i], s0_t=V)
-    }))
     yty=t(y)%*%y
 
 
 
     tt= do.call(rbind, lapply(1:ncol(X), function(i){
-          posterior_var_SS_suff(xtx=(attr(X,"d")[i]) , xty= Xty[i],yty=yty,n= nrow(X), s0_t=V)
+          posterior_mean_var_SS_suff(xtx=(attr(X,"d")[i]) , xty= Xty[i],yty=yty,n= nrow(X), s0_t= sqrt(V))
         }))
 
-    beta_1=tt[,2]
-    post_var=tt[,1]
+
+    post_mean =tt[,1]
+
+    post_var=tt[,2]
+    beta_1=tt[,3]
     post_mean2=  post_mean^2+post_var
     }
 
@@ -179,8 +179,9 @@ single_effect_regression =
 
     if(optimize_V == "EM"){
 
-      V =  sqrt(sum(alpha * (betahat^2 + ( beta_1/(nrow(X)-2))* shat2 ))) #optimize_prior_variance(optimize_V,betahat,shat2,prior_weights,
-                               #   alpha,post_mean2,
+      V =   sqrt(sum(alpha * (betahat^2 + ( beta_1/(nrow(X)-2))* shat2 ))) #optimize_prior_variance(optimize_V,betahat,shat2,prior_weights,
+
+        #V =  sum(alpha * (betahat^2 + ( beta_1/(nrow(X)-2))* shat2 ))                      #   alpha,post_mean2,
                                 #  check_null_threshold = check_null_threshold)
     }
 
@@ -359,16 +360,11 @@ lbf = function (V, shat2, T2) {
 }
 
 
-posterior_mean_SS_suff <- function(xtx,xty, s0_t=1){
-  omega <- (( 1/s0_t^2)+xtx)^-1
-  b_bar<- omega%*%(xty)
-  return( b_bar)
-}
 
 
-posterior_var_SS_suff <- function (xtx,xty,yty, n,s0_t=1){
+posterior_mean_var_SS_suff <- function (xtx,xty,yty, n,s0_t=1){
   if(s0_t <0.00001){
-    return(c(0,0))
+    return(c(0,0,0))
   }
   omega <- (( 1/s0_t^2)+xtx)^-1
   b_bar<- omega%*%(xty)
@@ -376,5 +372,5 @@ posterior_var_SS_suff <- function (xtx,xty,yty, n,s0_t=1){
   post_var_up <- 0.5*(yty  -  b_bar *(omega ^(-1))*b_bar)
   post_var_down <- 0.5*(n*(1/omega ))
   post_var <- omega*(post_var_up/post_var_down)* n/(n-2)
-  return( c( post_var,beta1))
+  return( c( b_bar, post_var,beta1))
 }

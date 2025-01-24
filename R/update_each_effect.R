@@ -19,7 +19,9 @@ update_each_effect = function (X, y, s, estimate_prior_variance = FALSE,
   if (L > 0)
     for (l in 1:L) {
 
-      # Remove lth effect from fitted values.
+
+      #browser()
+            # Remove lth effect from fitted values.
       s$Xr = s$Xr - compute_Xb(X,s$alpha[l,] * s$mu[l,])
 
       # Compute residuals.
@@ -48,6 +50,7 @@ update_each_effect = function (X, y, s, estimate_prior_variance = FALSE,
 
       s$Xr = s$Xr + compute_Xb(X,s$alpha[l,] * s$mu[l,])
     }
+  print(s$V)
   return(s)
 }
 

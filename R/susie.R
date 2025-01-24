@@ -314,7 +314,7 @@ susie = function (X,y,L = min(10,ncol(X)),
                    intercept = TRUE,
                    estimate_residual_variance = TRUE,
                    estimate_prior_variance = TRUE,
-                   estimate_prior_method = c( "optim", "EM","simple"),
+                   estimate_prior_method = c( "EM", "optim" ,"simple"),
                    check_null_threshold = 0,
                    prior_tol = 1e-9,
                    residual_variance_upperbound = Inf,
@@ -428,7 +428,7 @@ susie = function (X,y,L = min(10,ncol(X)),
   elbo = rep(as.numeric(NA),max_iter + 1)
   elbo[1] = -Inf;
   tracking = list()
-  #s$V = 0*s$V +1
+   s$V =  0*s$V  +1#/1:length(s$V)
   for (i in 1:max_iter) {
     if (track_fit)
       tracking[[i]] = susie_slim(s)
@@ -436,7 +436,7 @@ susie = function (X,y,L = min(10,ncol(X)),
                            check_null_threshold,
                            alpha=alpha,
                            beta=beta)
-print(s$V)
+
 
      if (verbose)
       print(paste0("objective:",get_objective(X,y,s)))
