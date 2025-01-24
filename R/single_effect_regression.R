@@ -179,11 +179,9 @@ single_effect_regression =
 
     if(optimize_V == "EM"){
 
-      V =   sqrt(sum(alpha * (betahat^2 + ( beta_1/(nrow(X)-2))* shat2 ))) #optimize_prior_variance(optimize_V,betahat,shat2,prior_weights,
 
-        #V =  sum(alpha * (betahat^2 + ( beta_1/(nrow(X)-2))* shat2 ))                      #   alpha,post_mean2,
-                                #  check_null_threshold = check_null_threshold)
-    }
+         V = sqrt( sum(alpha * (post_mean^2 + ( beta_1/(nrow(X)-2))* post_mean2 )) )                     #   alpha,post_mean2,
+   }
 
 #    post_mean2 =post_mean^2+ post_var
     return(list(alpha = alpha,mu = post_mean,mu2 =   post_mean2 ,lbf = lbf,
