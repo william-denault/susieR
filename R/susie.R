@@ -428,7 +428,7 @@ susie = function (X,y,L = min(10,ncol(X)),
   elbo = rep(as.numeric(NA),max_iter + 1)
   elbo[1] = -Inf;
   tracking = list()
-   s$V =  0*s$V  +1#/1:length(s$V)
+   s$V =  0*s$V  +rep( var(y) , length(s$V))
   for (i in 1:max_iter) {
     if (track_fit)
       tracking[[i]] = susie_slim(s)

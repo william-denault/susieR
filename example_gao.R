@@ -3,10 +3,15 @@ rm(list=ls())
 small_data <- readRDS("C:/Users/WD/Downloads/MiGA_eQTL.chr2_ENSG00000151694.univariate_data.rds")
 
 
-y= small_data$ENSG00000151694$residual_Y[[2]]
-X= small_data$ENSG00000151694$residual_X[[2]]
-res_susie =susieR::susie(X = X,y=y,L=20  )
+y= small_data$ENSG00000151694$residual_Y[[3]]
+X= small_data$ENSG00000151694$residual_X[[3]]
+
+
+
+res_susie =susieR::susie(X = X,y=y,L=20 )
 res_susie$sets
+res_susie$sigma2
+
 
 plot(y , predict(res_susie , X) )
 
@@ -14,7 +19,20 @@ plot( res_susie$pip)
 res_susie$sigma2/var(y)
 library(susieRsmall)
 
-res_susie_small =susieRsmall::susie(X = X,y=y,L=10, max_iter = 20 , estimate_prior_method = "EM")
+res_susie_small =susieRsmall::susie(X = X,y=y,L=20, max_iter = 20 )
+
+res_susie_small$sigma2
+
+
+
+
+
+
+
+
+
+
+
 
 res_susie_small$V
 res_susie_small$sets
@@ -31,8 +49,6 @@ plot(res_susie_small$mu[1,],res_susie$mu[1,])
 abline(a=0,b=1
        )
 
-
-plot( exp(res_susie_small$lbf_variable[1,])/sum(exp(res_susie_small$lbf_variable[1,])))
 
 cor(X[ ,which(res_susie_small$alpha[1,]>0.05)])^2
 
@@ -89,15 +105,21 @@ plot(y , predict(res_susie_small, X) )
 res_susie_small$V
 
 res_list= list()
-
+pv= c()
 for ( i in 1:ncol(X)){
 
 
   res_list[[i]]= summary(lm(y~X[,i]))$coefficients [2,]
+
+  z= summary(lm(y~X[,i]))$coefficients [2,3]
+  pv=c(pv, -log10(2 * (1 - pnorm(abs(z)))))
   print( i)
 }
 marginal = do.call(rbind, res_list)
 plot( -log10 (marginal[,4]))
+
+plot( pv, -log10(marginal[,4]))
+
 
 
 
@@ -109,9 +131,14 @@ plot( -log10 (marginal[,4]))
 
 o=10
 
+
+
+
 o=o+1
-set.seed(o)
-y = X[,1]+ rnorm( nrow(X),sd= 2*sd(X[,1]))
+
+
+  set.seed(o)
+y = X[,1]+ rnorm( nrow(X),sd= sd(X[,1]))
 
 var(X[,1])/var(y)
 devtools::load_all()

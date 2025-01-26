@@ -125,7 +125,7 @@ single_effect_regression =
 
     lbf  = do.call(c, lapply(1:ncol(X), function(j){
       compute_log_ssbf (x=X[,j],y=y,
-                        s0 = sqrt(V))
+                        s0 =   sqrt(V))
     }))
 
     lpo = lbf + log(prior_weights + sqrt(.Machine$double.eps))
@@ -179,8 +179,9 @@ single_effect_regression =
 
     if(optimize_V == "EM"){
 
+      #
+       V =   sqrt(  sum(alpha * (post_mean^2 + ( beta_1/(nrow(X)-2))* post_mean2 )) )
 
-         V = sqrt( sum(alpha * (post_mean^2 + ( beta_1/(nrow(X)-2))* post_mean2 )) )                     #   alpha,post_mean2,
    }
 
 #    post_mean2 =post_mean^2+ post_var
