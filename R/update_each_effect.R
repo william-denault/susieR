@@ -50,7 +50,6 @@ update_each_effect = function (X, y, s, estimate_prior_variance = FALSE,
 
       s$Xr = s$Xr + compute_Xb(X,s$alpha[l,] * s$mu[l,])
     }
-  print(s$V)
   return(s)
 }
 

@@ -125,7 +125,7 @@ single_effect_regression =
 
     lbf  = do.call(c, lapply(1:ncol(X), function(j){
       compute_log_ssbf (x=X[,j],y=y,
-                        s0 =   sqrt(V))
+                        s0 = sqrt(V))
     }))
 
     lpo = lbf + log(prior_weights + sqrt(.Machine$double.eps))
@@ -156,20 +156,20 @@ single_effect_regression =
     }else{
 
 
-    yty=t(y)%*%y
+      yty=t(y)%*%y
 
 
 
-    tt= do.call(rbind, lapply(1:ncol(X), function(i){
-          posterior_mean_var_SS_suff(xtx=(attr(X,"d")[i]) , xty= Xty[i],yty=yty,n= nrow(X), s0_t= sqrt(V))
-        }))
+      tt= do.call(rbind, lapply(1:ncol(X), function(i){
+        posterior_mean_var_SS_suff(xtx=(attr(X,"d")[i]) , xty= Xty[i],yty=yty,n= nrow(X), s0_t= sqrt(V))
+      }))
 
 
-    post_mean =tt[,1]
+      post_mean =tt[,1]
 
-    post_var=tt[,2]
-    beta_1=tt[,3]
-    post_mean2=  post_mean^2+post_var
+      post_var=tt[,2]
+      beta_1=tt[,3]
+      post_mean2=  post_mean^2+post_var
     }
 
 
@@ -179,12 +179,13 @@ single_effect_regression =
 
     if(optimize_V == "EM"){
 
-      #
-       V =   sqrt(  sum(alpha * (post_mean^2 + ( beta_1/(nrow(X)-2))* post_mean2 )) )
+      V =   sqrt(sum(alpha * (betahat^2 + ( beta_1/(nrow(X)-2))* shat2 ))) #optimize_prior_variance(optimize_V,betahat,shat2,prior_weights,
 
-   }
+      #V =  sum(alpha * (betahat^2 + ( beta_1/(nrow(X)-2))* shat2 ))                      #   alpha,post_mean2,
+      #  check_null_threshold = check_null_threshold)
+    }
 
-#    post_mean2 =post_mean^2+ post_var
+    #    post_mean2 =post_mean^2+ post_var
     return(list(alpha = alpha,mu = post_mean,mu2 =   post_mean2 ,lbf = lbf,
                 lbf_model = lbf_model,V = V,loglik = loglik))
   }
@@ -239,9 +240,9 @@ optimize_prior_variance = function (optimize_V, betahat, shat2, prior_weights,
 
 
 
-   if (loglik(0,betahat,shat2,prior_weights) +
+  if (loglik(0,betahat,shat2,prior_weights) +
       check_null_threshold >= loglik(V,betahat,shat2,prior_weights))
-     V = 0
+    V = 0
   return(V)
 }
 
@@ -265,7 +266,7 @@ posterior_moment_SS <- function (x,y,
   sxy <- xy/sqrt(xx*yy)
 
   s1= r0^2/(xx
-            )
+  )
 
   beta1=  beta+yy*(1 - r0*sxy^2)
   alpha1=alpha+n
@@ -280,7 +281,7 @@ posterior_moment_SS <- function (x,y,
 
 
   out= c(b_bar,  post_moment2, alpha1, beta1, s1)
- names( out) =c("b_bar",  "post_moment2", "alpha1", "beta1", "s1")
+  names( out) =c("b_bar",  "post_moment2", "alpha1", "beta1", "s1")
   return(out)
 }
 

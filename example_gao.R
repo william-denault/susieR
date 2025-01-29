@@ -135,6 +135,24 @@ o=10
 
 
 o=o+1
+ls_res= list()
+for ( k in 1:100){
+  set.seed(k)
+  true_pos = sample(1:ncol(X),size=1)
+
+  y = X[,true_pos]+ rnorm( nrow(X),sd= sd(X[,true_pos]))
+  res_susie_small =susieRsmall::susie(X = X[,1:1000],y=y,L=10,
+                                      max_iter =20,
+                                      estimate_prior_method = "EM")
+
+  res_susie  =susieR ::susie(X = X[,1:1000],y=y,L=10, max_iter =20)
+  ls_res [[k]] = c( ifelse( true_pos %in% res_susie$sets$cs[[1]],1,0),
+                    ifelse( true_pos %in% res_susie_small$sets$cs[[1]],1,0))
+  print(k)
+  print( c( ifelse( true_pos %in% res_susie$sets$cs[[1]],1,0),
+            ifelse( true_pos %in% res_susie_small$sets$cs[[1]],1,0)))
+}
+
 
 
   set.seed(o)

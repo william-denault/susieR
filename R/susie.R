@@ -306,32 +306,32 @@
 #' @export
 #'
 susie = function (X,y,L = min(10,ncol(X)),
-                   scaled_prior_variance = 0.2,
-                   residual_variance = NULL,
-                   prior_weights = NULL,
-                   null_weight = 0,
-                   standardize = TRUE,
-                   intercept = TRUE,
-                   estimate_residual_variance = TRUE,
-                   estimate_prior_variance = TRUE,
-                   estimate_prior_method = c( "EM", "optim" ,"simple"),
-                   check_null_threshold = 0,
-                   prior_tol = 1e-9,
-                   residual_variance_upperbound = Inf,
-                   s_init = NULL,
-                   coverage = 0.95,
-                   min_abs_corr = 0.5,
-                   compute_univariate_zscore = FALSE,
-                   na.rm = FALSE,
-                   max_iter = 100,
-                   tol = 1e-3,
-                   verbose = FALSE,
-                   track_fit = FALSE,
-                   residual_variance_lowerbound = var(drop(y))/1e4,
-                   refine = FALSE,
-                   n_purity = 100,
-                   alpha=0,
-                   beta=0 ) {
+                  scaled_prior_variance = 0.2,
+                  residual_variance = NULL,
+                  prior_weights = NULL,
+                  null_weight = 0,
+                  standardize = TRUE,
+                  intercept = TRUE,
+                  estimate_residual_variance = TRUE,
+                  estimate_prior_variance = TRUE,
+                  estimate_prior_method = c( "EM", "optim" ,"simple"),
+                  check_null_threshold = 0,
+                  prior_tol = 1e-9,
+                  residual_variance_upperbound = Inf,
+                  s_init = NULL,
+                  coverage = 0.95,
+                  min_abs_corr = 0.5,
+                  compute_univariate_zscore = FALSE,
+                  na.rm = FALSE,
+                  max_iter = 100,
+                  tol = 1e-3,
+                  verbose = FALSE,
+                  track_fit = FALSE,
+                  residual_variance_lowerbound = var(drop(y))/1e4,
+                  refine = FALSE,
+                  n_purity = 100,
+                  alpha=0,
+                  beta=0 ) {
 
   # Process input estimate_prior_method.
   estimate_prior_method = match.arg(estimate_prior_method)
@@ -411,9 +411,9 @@ susie = function (X,y,L = min(10,ncol(X)),
       L = num_effects
     }else if(min(p,L) < num_effects){
       warning_message(paste("Specified number of effects L =",min(p,L),
-                    "is smaller than the number of effects",num_effects,
-                    "in input SuSiE model. The SuSiE model will have",
-                    num_effects,"effects."))
+                            "is smaller than the number of effects",num_effects,
+                            "in input SuSiE model. The SuSiE model will have",
+                            num_effects,"effects."))
       L = num_effects
     }
     # expand s_init if L > num_effects.
@@ -428,7 +428,7 @@ susie = function (X,y,L = min(10,ncol(X)),
   elbo = rep(as.numeric(NA),max_iter + 1)
   elbo[1] = -Inf;
   tracking = list()
-   s$V =  0*s$V  +rep( var(y) , length(s$V))
+  s$V =  0*s$V  +1#/1:length(s$V)
   for (i in 1:max_iter) {
     if (track_fit)
       tracking[[i]] = susie_slim(s)
@@ -438,7 +438,7 @@ susie = function (X,y,L = min(10,ncol(X)),
                            beta=beta)
 
 
-     if (verbose)
+    if (verbose)
       print(paste0("objective:",get_objective(X,y,s)))
 
     # Compute objective before updating residual variance because part
@@ -474,7 +474,7 @@ susie = function (X,y,L = min(10,ncol(X)),
 
     # Estimate unshrunk intercept.
     s$intercept = mean_y - sum(attr(X,"scaled:center") *
-      (colSums(s$alpha * s$mu)/attr(X,"scaled:scale")))
+                                 (colSums(s$alpha * s$mu)/attr(X,"scaled:scale")))
     s$fitted = s$Xr + mean_y
   } else {
     s$intercept = 0
@@ -545,37 +545,37 @@ susie = function (X,y,L = min(10,ncol(X)),
           break
         }
         s2 = susie(X,y,L = L,scaled_prior_variance = scaled_prior_variance,
-            residual_variance = residual_variance,
-            prior_weights = pw_cs, s_init = NULL,null_weight = null_weight,
-            standardize = standardize,intercept = intercept,
-            estimate_residual_variance = estimate_residual_variance,
-            estimate_prior_variance = estimate_prior_variance,
-            estimate_prior_method = estimate_prior_method,
-            check_null_threshold = check_null_threshold,
-            prior_tol = prior_tol,coverage = coverage,
-            residual_variance_upperbound = residual_variance_upperbound,
-            min_abs_corr = min_abs_corr,
-            compute_univariate_zscore = compute_univariate_zscore,
-            na.rm = na.rm,max_iter = max_iter,tol = tol,verbose = FALSE,
-            track_fit = FALSE,residual_variance_lowerbound = var(drop(y))/1e4,
-            refine = FALSE)
+                   residual_variance = residual_variance,
+                   prior_weights = pw_cs, s_init = NULL,null_weight = null_weight,
+                   standardize = standardize,intercept = intercept,
+                   estimate_residual_variance = estimate_residual_variance,
+                   estimate_prior_variance = estimate_prior_variance,
+                   estimate_prior_method = estimate_prior_method,
+                   check_null_threshold = check_null_threshold,
+                   prior_tol = prior_tol,coverage = coverage,
+                   residual_variance_upperbound = residual_variance_upperbound,
+                   min_abs_corr = min_abs_corr,
+                   compute_univariate_zscore = compute_univariate_zscore,
+                   na.rm = na.rm,max_iter = max_iter,tol = tol,verbose = FALSE,
+                   track_fit = FALSE,residual_variance_lowerbound = var(drop(y))/1e4,
+                   refine = FALSE)
         sinit2 = s2[c("alpha","mu","mu2")]
         class(sinit2) = "susie"
         s3 = susie(X,y,L = L,scaled_prior_variance = scaled_prior_variance,
-            residual_variance = residual_variance,prior_weights = pw_s,
-            s_init = sinit2,null_weight = null_weight,
-            standardize = standardize,intercept = intercept,
-            estimate_residual_variance = estimate_residual_variance,
-            estimate_prior_variance = estimate_prior_variance,
-            estimate_prior_method = estimate_prior_method,
-            check_null_threshold = check_null_threshold,
-            prior_tol = prior_tol,coverage = coverage,
-            residual_variance_upperbound = residual_variance_upperbound,
-            min_abs_corr = min_abs_corr,
-            compute_univariate_zscore = compute_univariate_zscore,
-            na.rm = na.rm,max_iter = max_iter,tol = tol,verbose = FALSE,
-            track_fit = FALSE,residual_variance_lowerbound = var(drop(y))/1e4,
-            refine = FALSE)
+                   residual_variance = residual_variance,prior_weights = pw_s,
+                   s_init = sinit2,null_weight = null_weight,
+                   standardize = standardize,intercept = intercept,
+                   estimate_residual_variance = estimate_residual_variance,
+                   estimate_prior_variance = estimate_prior_variance,
+                   estimate_prior_method = estimate_prior_method,
+                   check_null_threshold = check_null_threshold,
+                   prior_tol = prior_tol,coverage = coverage,
+                   residual_variance_upperbound = residual_variance_upperbound,
+                   min_abs_corr = min_abs_corr,
+                   compute_univariate_zscore = compute_univariate_zscore,
+                   na.rm = na.rm,max_iter = max_iter,tol = tol,verbose = FALSE,
+                   track_fit = FALSE,residual_variance_lowerbound = var(drop(y))/1e4,
+                   refine = FALSE)
         m = c(m,list(s3))
       }
       if(length(m) == 0){
